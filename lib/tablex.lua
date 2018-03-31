@@ -83,7 +83,7 @@ do
 		return	val
 	end
 	
-	function mynext(tab)
+	function mynext(tab, k)
 		local mt = getmetatable(tab)
 		return next(mt.d, k)
 	end
