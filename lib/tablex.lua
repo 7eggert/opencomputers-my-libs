@@ -47,7 +47,7 @@ do
 		if	val
 		then	return val
 		end
-		if	mt.n and mt.n < 2
+		if	mt.n and mt.n < 1
 		then	return nil
 		end
 		return setmetatable({}, {
