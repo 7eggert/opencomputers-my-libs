@@ -231,7 +231,10 @@ do
 	-- unserializes the result of table.lua_serialize
 	function table.lua_unserialize(...)
 		local r = {}
-		runserialize(r, 1, {...})
+		if	type((...)) == "table"
+		then	runserialize(r, 1, ...)
+		else	runserialize(r, 1, {...})
+		end
 		return table.unpack(r)
 	end
 
