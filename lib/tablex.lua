@@ -14,6 +14,15 @@ function table.join(...)
 	return result
 end
 
+-- append values to a table
+function table.append(t, ...)
+	local i, v
+	for i, v in pairs{...}
+	do	table.insert(t, v)
+	end
+	return t
+end
+
 -- recursively dump table
 -- do not use on looping tables yet
 function table.dump(tab, indent)
@@ -109,6 +118,123 @@ do
 			n          = n
 		})
 	end
+end
+
+do
+	local rserialize
+	function rserialize(r, ...)
+		local t = {}
+		local push_t = function()
+			if	#t <= 0
+			then	return
+			end
+			table.append(r, "s", #t, table.unpack(t))
+			t={}
+		end
+		for	i, v in ipairs{...}
+		do	if	type(v) == "table"
+			then	push_t()
+				table.append(r, "t")
+				local k, vv
+				for	k, vv in pairs(v)
+				do	table.append(r, "k", k)
+					if	type(vv) == "table"
+					then	rserialize(r, vv)
+					else	table.append(r, "v", vv)
+					end
+				end
+				table.append(r, "n")
+			elseif	type(v) == "function"
+			then	push_t()
+				table.append(r, "f")
+			elseif  type(v) == "nil"
+			then	push_t()
+				table.append(r, "n")
+			else	table.insert(t, v)
+			end
+		end
+		if	#t > 0
+		then	table.append(r, "s", #t, table.unpack(t))
+			t={}
+		end
+	end
+
+	local error_unserialized
+	function error_unserialized()
+		error("calling unserialized function, serializing functions is unsupported")
+	end
+
+	local runserialize_table
+	function runserialize_table(r, i, nn, arg)
+		local t = {}
+		while	arg[i] == 'k'
+		do	local k = arg[i + 1]
+			i = i + 2
+			if	arg[i] == "v"
+			then	local v = arg[i + 1]
+				t[k] = v
+				i = i + 2
+			elseif	arg[i] == "t"
+			then	local v = {}
+				i = runserialize_table(v, i+1, 0, arg)
+				t[k] = v[1]
+			else	error("invalid list: barf in table on", i, arg[i])
+			end
+		end
+		if	arg[i] == "n"
+		then	i = i + 1
+		else	error("invalid list: barf in table on", i, arg[i])
+		end
+		nn = nn + 1
+		r[nn] = t
+		return i, nn
+	end
+
+	local runserialize
+	function runserialize(r, i, arg)
+		local nn = 0
+		while arg[i]
+		do	if	not arg[i]
+			then	errot("invalid list, barf on".. i)
+			end
+			local c = arg[i]
+			if	c == "s"
+			then	local j
+				local jj = arg[i+1]
+				for j = 1, jj
+				do	local n = nn
+					r[n+j] = arg[i+1+j]
+				end
+				nn = nn + jj
+				i = i + jj + 2
+			elseif	c == "f"
+			then	nn = nn + 1
+				r[n] = error_unserialized
+			elseif	c == "t"
+			then	i, nn = runserialize_table(r, i+1, nn, arg)
+			else
+				error("invalid list: barf on".. i.. arg[i])
+			end
+		end
+		return i, nn
+	end
+
+	-- serialize a list into a list not containing tables and functions
+	-- tables can be restored, functions can't
+	-- if a table is recursive, the result will be larger than the universe
+	function table.lua_serialize(...)
+		local r = {}
+		rserialize(r, ...)
+		return table.unpack(r)
+	end
+
+	-- unserializes the result of table.lua_serialize
+	function table.lua_unserialize(...)
+		local r = {}
+		runserialize(r, 1, {...})
+		return table.unpack(r)
+	end
+
 end
 
 return table
