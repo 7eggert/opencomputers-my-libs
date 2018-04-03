@@ -140,6 +140,8 @@ do
 				do	table.append(r, "k", k)
 					if	type(vv) == "table"
 					then	rserialize(r, vv)
+					elseif	type(vv) == "function"
+					then	table.append(r, "f")
 					else	table.append(r, "v", vv)
 					end
 				end
@@ -153,10 +155,7 @@ do
 			else	table.insert(t, v)
 			end
 		end
-		if	#t > 0
-		then	table.append(r, "s", #t, table.unpack(t))
-			t={}
-		end
+		push_t()
 	end
 
 	local error_unserialized
@@ -174,6 +173,9 @@ do
 			then	local v = arg[i + 1]
 				t[k] = v
 				i = i + 2
+			elseif	arg[i] == "f"
+			then	t[k] = error_unserialized
+				i = i + 1
 			elseif	arg[i] == "t"
 			then	local v = {}
 				i = runserialize_table(v, i+1, 0, arg)
@@ -209,7 +211,7 @@ do
 				i = i + jj + 2
 			elseif	c == "f"
 			then	nn = nn + 1
-				r[n] = error_unserialized
+				r[nn] = error_unserialized
 			elseif	c == "t"
 			then	i, nn = runserialize_table(r, i+1, nn, arg)
 			else
