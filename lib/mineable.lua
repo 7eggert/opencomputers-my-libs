@@ -16,6 +16,7 @@ return	{
 	["basemetals:tin_ore"] = {true, true},
 	["basemetals:zinc_ore"] = {true, true},
 
+	["minecraft:cobblestone"] = false, -- structures
 	["minecraft:coal_ore"] = {true, true},
 	["minecraft:diamond_ore"] = {"silk", true},
 	["minecraft:dirt"] = "hand",
