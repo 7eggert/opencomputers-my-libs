@@ -23,6 +23,20 @@ function table.append(t, ...)
 	return t
 end
 
+-- print the pairs in the table
+function table.printPairs(t,before, after)
+	local	k,v
+	if	before ~= nil
+	then	print(before)
+	end
+	for	k,v in pairs(t)
+	do	print(k, v)
+	end
+	if	after ~= nil
+	then	print(after)
+	end
+end
+
 -- recursively dump table
 -- do not use on looping tables yet
 function table.dump(tab, indent)
